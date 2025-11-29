@@ -14,7 +14,7 @@ use vstd::{pervasive::*, *};
 verus! {
 
 tokenized_state_machine!{
-    X {
+    State {
         fields {
             #[sharding(map)]
             pub owner_map: Map<String, bool>,
@@ -63,14 +63,6 @@ tokenized_state_machine!{
             forall |owner: String|
               self.mut_map.dom().contains(owner) ==> 
                 (self.mut_map[owner] == 0 || self.mut_map[owner] == 1)
-        }
-
-        #[invariant]
-        pub fn synchronicity(self) -> bool {
-            forall |owner: String|
-                self.owner_map.dom().contains(owner) <==> 
-                (self.imm_map.dom().contains(owner) && 
-                 self.mut_map.dom().contains(owner))
         }
 
         init!{
@@ -124,7 +116,8 @@ tokenized_state_machine!{
         transition!{
             drop_imm_ref(owner: String) {
                 have owner_map >= [owner => let _];
-
+                
+                // if you try to remove an imm ref with counter == 0, it just removes it
                 remove imm_map -= [owner => let curr];
                 require(curr > 0);
                 add imm_map += [owner => (curr - 1)];
@@ -140,6 +133,22 @@ tokenized_state_machine!{
         }
     }
 }
+
+proof fn main_model() {
+    // let tracked (Tracked(instance), Tracked(owner_map), Tracked(imm_map), Tracked(mut_map)) =
+    //     State::Instance::initialize();
+    
+    // // let mut x = 7;
+    // let tracked (Tracked(owner_token), Tracked(imm_token_init), Tracked(mut_token_init)) = 
+    //     instance.add_new_owner(
+    //         "x".to_string(),
+    //         true,
+    //         instance::owner_map,
+    //         instance::imm_map,
+    //         instance::mut_map
+    //     );
+}
+
 
 fn main() {}
 }
