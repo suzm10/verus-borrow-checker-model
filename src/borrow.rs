@@ -14,7 +14,7 @@ use vstd::{pervasive::*, *};
 verus! {
 
 tokenized_state_machine!{
-    State {
+    X {
         fields {
             #[sharding(map)]
             pub owner_map: Map<String, bool>,
@@ -43,12 +43,22 @@ tokenized_state_machine!{
 
         #[inductive(drop_mut_ref)]
         fn drop_mut_ref_inductive(pre: Self, post: Self, owner: String) { }
+        
+        #[inductive(mutate_referent)]
+        fn mutate_referent_inductive(pre: Self, post: Self, owner: String) { }
 
         #[invariant]
-        pub fn aliasing_xor_mutability(self) -> bool {
+        pub fn exclusion_principle(self) -> bool {
             forall |owner: String|
                 self.owner_map.dom().contains(owner) ==>
-                    (self.mut_map[owner] > 0 ==> self.imm_map[owner] == 0)
+                    (self.mut_map[owner] == 1 ==> self.imm_map[owner] == 0)
+        }
+
+        #[invariant]
+        pub fn exclusion_principle_reverse(self) -> bool {
+            forall |owner: String|
+                self.owner_map.dom().contains(owner) ==>
+                    (self.imm_map[owner] > 0 ==> self.mut_map[owner] == 0)
         }
 
         #[invariant]
@@ -131,21 +141,30 @@ tokenized_state_machine!{
                 add mut_map += [owner => 0];
             }
         }
+
+        transition!{
+            mutate_referent(owner: String) {
+                // enforce stack principle
+                have owner_map >= [owner => let _];
+                have imm_map >= [owner => 0];
+                have mut_map >= [owner => 0];
+            }
+        }
     }
 }
 
 proof fn main_model() {
     // let tracked (Tracked(instance), Tracked(owner_map), Tracked(imm_map), Tracked(mut_map)) =
-    //     State::Instance::initialize();
+    //     X::Instance::initialize();
     
-    // // let mut x = 7;
+    // // // let mut x = 7;
     // let tracked (Tracked(owner_token), Tracked(imm_token_init), Tracked(mut_token_init)) = 
     //     instance.add_new_owner(
     //         "x".to_string(),
     //         true,
-    //         instance::owner_map,
-    //         instance::imm_map,
-    //         instance::mut_map
+    //         owner_map.map(),
+    //         imm_map.map(),
+    //         mut_map.map()
     //     );
 }
 
