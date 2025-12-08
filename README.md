@@ -6,3 +6,4 @@ See report for both the borrow checker model here + the one in https://github.co
 
 ## To-do:
 - change int types to nat + remove non-zero invariant?
+- actually embed proofs into example program
