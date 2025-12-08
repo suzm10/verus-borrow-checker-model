@@ -53,12 +53,18 @@ fn main() {
     // *x += 17; // Use x again for a write access.
     // let val = *shared1; // Error! shared1 used after x got mutated.
 
-    let mut local = 6;
-    let x = &local;
-    let result = example2(x, |inner_x| {
-        retag inner_x;
-        let raw_pointer: *mut i32= unsafe { mem::transmute(inner_x) };
-        unsafe { *raw_pointer = 15; }
-    });
-    println!("{}", result); // Prints "5" (aka 15/3).
+    // let mut local = 6;
+    // let x = &local;
+    // let result = example2(x, |inner_x| {
+    //     retag inner_x;
+    //     let raw_pointer: *mut i32= unsafe { mem::transmute(inner_x) };
+    //     unsafe { *raw_pointer = 15; }
+    // });
+    // println!("{}", result); // Prints "5" (aka 15/3).
+
+    let x = 7;
+
+    let r1 = &mut x;
+    *r1 += 5;
+    println!("r1 = {}", *r1);
 }
